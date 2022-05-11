@@ -1,13 +1,12 @@
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as Et
+from Instruction import Instruction
 
 
 def parse_data(filename):
-    tree = ET.parse("./Data/" + filename)
+    tree = Et.parse("./Data/" + filename)
     root = tree.getroot()
-    data = [
-        # [instructionID, operation, adress] 
-    ]
+    instructions = []
 
     for instruction in root:
-        data.append([int(instruction[0].text), instruction[1].text, int(instruction[2].text)])
-    return data
+        instructions.append(Instruction(int(instruction[0].text), instruction[1].text, int(instruction[2].text)))
+    return instructions

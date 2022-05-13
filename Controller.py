@@ -1,5 +1,6 @@
 from Frame import Frame
 from Process import Process
+from tabulate import tabulate
 
 
 class Controller:
@@ -143,20 +144,49 @@ class Controller:
             self.terminate(instruction)
         self.jiffy += 1
 
+    # def one_instruction(self):
+    #     if self.jiffy < len(self.instructions):
+    #         instruction = self.instructions[self.jiffy]
+    #         self.select_instruction(instruction)
+    #
+    #         jiffy = self.jiffy
+    #         virtual_address = instruction.get_address()
+    #         page_table = self.processes[instruction.get_process_id()].get_page_table()
+    #         physical_address = page_table[virtual_address // 4096].get_frame_number() * 4096 + virtual_address % 4096
+    #
+    #         physical_address
+    #         return jiffy, , self.processes[instruction.get_process_id()].get_page_table(), \
+    #             self.ram
+
     def one_instruction(self):
         if self.jiffy < len(self.instructions):
             instruction = self.instructions[self.jiffy]
             self.select_instruction(instruction)
 
-            return_values = []
-            return_values.append(self.jiffy)  # Jiffy
-            return_values.append(instruction)  # Instruction
-            return_values.append(self.processes[instruction.get_process_id()].get_page_table())  # Page table
-            return_values.append(self.ram)  # RAM
-            return return_values
+            return_string = ""
+            return_string += "Jiffy: " + str(self.jiffy) + "\n"*2
+            return_string += "Current instruction: " + str(instruction) + "\n"*2
+            return_string += "Next instruction: " + str(self.instructions[self.jiffy + 1]) + "\n"*2
+            return_string += "Page table: \n"""
 
+            page_numbers = ["Page Number"]
+            present_bits = ["Present Bit"]
+            modified_bits = ["Modified Bit"]
+            last_access_times = ["Last Access Time"]
+            frame_numbers = ["Frame Number"]
+            for page in self.processes[instruction.get_process_id()].get_page_table():
+                page_numbers.append(page.get_page_number())
+                present_bits.append(page.get_present_bit())
+                modified_bits.append(page.get_modified_bit())
+                last_access_times.append(page.get_last_access_time())
+                frame_numbers.append(page.get_frame_number())
+            table = [page_numbers, present_bits, modified_bits, last_access_times, frame_numbers]
 
+            return_string += tabulate(table, tablefmt="grid") + "\n"*2
 
+            return_string += "Processes in RAM: " + str(self.processes_in_ram) + "\n"*2
+
+            return return_string
 
     def all_instructions(self):
         while self.jiffy < len(self.instructions):

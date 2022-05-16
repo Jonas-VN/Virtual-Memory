@@ -4,7 +4,7 @@ import PySimpleGUI as Sg
 
 
 def main():
-    instructions = parse_data("instructions_20000_20.xml")
+    instructions = parse_data("instructions_20000_4.xml")
     controller = Controller(instructions)
     reached_end = False
 
@@ -19,6 +19,8 @@ def main():
             jiffy, physical_address, current_instruction, next_instruction, page_tabel, ram, page_in, page_out = \
                 controller.one_instruction()
 
+            print(background_color="black")
+
             print(f"\nJiffy: {jiffy}", font="Courier 10 bold")
             print(f"\nPhysical address: {physical_address}", font="Courier 10 bold")
 
@@ -35,15 +37,20 @@ def main():
             print(ram, font="Courier 10 italic")
 
             print(f"\nPage in: {page_in}", font="Courier 10 bold")
-            print(f"Page out: {page_out}", font="Courier 10 bold")
+            print(f"Page out: {page_out}\n", font="Courier 10 bold")
+
+            print(background_color="black")
 
             if next_instruction == "/":
+                print("End of the program.", font="Courier 15 bold")
                 reached_end = True
 
         elif event == "Run all" and not reached_end:
             jiffy, physical_address, current_instruction, next_instruction, page_tabel, ram, page_in, page_out = \
                 controller.all_instructions()
 
+            print(background_color="black")
+
             print(f"\nJiffy: {jiffy}", font="Courier 10 bold")
             print(f"\nPhysical address: {physical_address}", font="Courier 10 bold")
 
@@ -60,9 +67,12 @@ def main():
             print(ram, font="Courier 10 italic")
 
             print(f"\nPage in: {page_in}", font="Courier 10 bold")
-            print(f"Page out: {page_out}", font="Courier 10 bold")
+            print(f"Page out: {page_out}\n", font="Courier 10 bold")
+
+            print(background_color="black")
 
             if next_instruction == "/":
+                print("\n\nEnd of the program.", font="Courier 15 bold")
                 reached_end = True
 
         elif event == Sg.WIN_CLOSED:

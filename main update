@@ -22,9 +22,9 @@ def main():
 
     while True:
         event, values = window.read()
-        maxInstructions=False
 
-        if event == "Run 1" and maxInstructions == False:
+
+        if event == "Run 1" :
             window["Run 1"].update(disabled=False)
 
 
@@ -50,7 +50,6 @@ def main():
             print(page_in)
             print(page_out)
             if jiffy==len(instructions)-1:
-                maxInstructions = True
                 window["Run 1"].update(disabled=True)
                 print("no more instructions")
 

@@ -7,11 +7,11 @@ class Page:
         self.frame_number = -1
 
     def __str__(self):
-        return "Page Number: " + str(self.get_page_number()) + "\n" + \
-               "Present Bit: " + str(self.get_present_bit()) + "\n" + \
-               "Modified Bit: " + str(self.get_modified_bit()) + "\n" + \
-               "Last Access Time: " + str(self.get_last_access_time()) + "\n" + \
-               "Frame Number: " + str(self.get_frame_number()) + "\n"
+        return "\tPage Number: " + str(self.get_page_number()) + "\n" + \
+               "\tPresent Bit: " + str(self.get_present_bit()) + "\n" + \
+               "\tModified Bit: " + str(self.get_modified_bit()) + "\n" + \
+               "\tLast Access Time: " + str(self.get_last_access_time()) + "\n" + \
+               "\tFrame Number: " + str(self.get_frame_number()) + "\n"
 
     def get_page_number(self):
         return self.page_number

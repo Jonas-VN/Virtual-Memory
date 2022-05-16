@@ -6,6 +6,8 @@ class Process:
         self.process_id = process_id
         self.page_table = []
         self.page_faults = 0
+        self.page_in = 0
+        self.page_out = 0
 
         for i in range(16):
             self.page_table.append(Page(i))
@@ -23,6 +25,18 @@ class Process:
 
     def get_page_faults(self):
         return self.page_faults
+
+    def get_page_in(self):
+        return self.page_in
+
+    def get_page_out(self):
+        return self.page_out
+
+    def set_page_in(self, page_in):
+        self.page_in = page_in
+
+    def set_page_out(self, page_out):
+        self.page_out = page_out
 
     def set_page_faults(self, page_faults):
         self.page_faults = page_faults
@@ -47,3 +61,9 @@ class Process:
 
     def increment_page_faults(self):
         self.page_faults += 1
+
+    def increment_page_in(self):
+        self.page_in += 1
+
+    def increment_page_out(self):
+        self.page_out += 1

@@ -64,10 +64,11 @@ class Controller:
             if lru_frame.get_page():
                 frame_page = lru_frame.get_page()
                 frame_page.clear_page()
+                process.increment_page_out()
 
             lru_frame.set_page(page)
             page.set_page(lru_frame.get_frame_number())
-            process.increment_page_faults()
+            process.increment_page_in()
 
         page.set_last_access_time(self.jiffy)
 
@@ -88,6 +89,7 @@ class Controller:
             new_frames_per_process = 12 // (len(self.processes_in_ram) + 1)
             frames_to_remove_per_process = old_frames_per_process - new_frames_per_process
 
+            # Nodige frames van andere processen verwijderen
             available_frames = []
             for process_id in self.processes_in_ram:
                 frames_in_ram_with_process_id = self.get_frames_in_ram_with_process_id(process_id)
@@ -95,7 +97,9 @@ class Controller:
                     lru_frame = self.get_lru_frame(frames_in_ram_with_process_id)
                     available_frames.append(lru_frame)
                     frames_in_ram_with_process_id.remove(lru_frame)
+                    # self.processes[process_id].increment_page_out()
 
+            # Nodige frames toewijden aan process, nog niet er in steken
             for frame in available_frames:
                 frame.set_process_id(instruction.get_process_id())
                 frame.set_page(None)
@@ -110,15 +114,18 @@ class Controller:
         self.check_ram(instruction)
 
     def terminate(self, instruction):
+        # Nog maar 1 process in de ram, alles opruimen
         if len(self.processes_in_ram) == 1:
             for frame in self.ram:
                 if frame.get_page():
                     frame.get_page().clear_page()
                     frame.set_page(None)
+                    self.processes[self.processes_in_ram[0]].increment_page_out()
                 frame.set_process_id(-1)
 
             self.processes_in_ram.remove(instruction.get_process_id())
 
+        # Nodige processen extra ruimte geven, niks verwijder/toevoegen
         else:
             old_frames_per_process = 12 // len(self.processes_in_ram)
             new_frames_per_process = 12 // (len(self.processes_in_ram) - 1)
@@ -163,11 +170,17 @@ class Controller:
             instruction = self.instructions[self.jiffy]
             self.select_instruction(instruction)
 
-            return_string = ""
-            return_string += "Jiffy: " + str(self.jiffy) + "\n"*2
-            return_string += "Current instruction: " + str(instruction) + "\n"*2
-            return_string += "Next instruction: " + str(self.instructions[self.jiffy + 1]) + "\n"*2
-            return_string += "Page table: \n"""
+            return_values = []
+            return_values.append(self.jiffy)
+
+            virtual_page_number = instruction.get_address() // 4096
+            offset = instruction.get_address() % 4096
+            physical_page_number = self.processes[instruction.get_process_id()].get_page_table()[virtual_page_number].get_page_number()
+            physical_address = physical_page_number + offset
+            return_values.append(physical_address)
+
+            return_values.append(instruction)
+            return_values.append(self.instructions[self.jiffy])  # Jiffy is al geïncrementeerd, dus wijst al naar de volgende instructie
 
             page_numbers = ["Page Number"]
             present_bits = ["Present Bit"]
@@ -182,12 +195,34 @@ class Controller:
                 frame_numbers.append(page.get_frame_number())
             table = [page_numbers, present_bits, modified_bits, last_access_times, frame_numbers]
 
-            return_string += tabulate(table, tablefmt="grid") + "\n"*2
+            return_values.append(tabulate(table, tablefmt="grid"))
 
-            return_string += "Processes in RAM: " + str(self.processes_in_ram) + "\n"*2
+            process_ids = ["Process ID"]
+            page_numbers = ["Page Number"]
+            frame_numbers = ["Frame Number"]
+            for frame in self.ram:
+                process_ids.append(frame.get_process_id())
+                if frame.get_page():
+                    page_numbers.append(frame.get_page().get_page_number())
+                else:
+                    page_numbers.append("")
+                frame_numbers.append(frame.get_frame_number())
 
-            return return_string
+            table = [frame_numbers, process_ids, page_numbers]
+            return_values.append(tabulate(table, tablefmt="grid"))
+
+            page_in = 0
+            page_out = 0
+            for process in self.processes:
+                page_in += process.get_page_in()
+                page_out += process.get_page_out()
+
+            return_values.append(page_in)
+            return_values.append(page_out)
+
+            return return_values
 
     def all_instructions(self):
         while self.jiffy < len(self.instructions):
             self.select_instruction(self.instructions[self.jiffy])
+        return self.one_instruction()

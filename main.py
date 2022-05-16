@@ -42,7 +42,7 @@ def main():
             print(background_color="black")
 
             if next_instruction == "/":
-                print("End of the program.", font="Courier 15 bold")
+                print("\n\nEnd of the program.", font="Courier 15 bold")
                 reached_end = True
 
         elif event == "Run all" and not reached_end:

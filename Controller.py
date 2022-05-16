@@ -95,9 +95,10 @@ class Controller:
                 frames_in_ram_with_process_id = self.get_frames_in_ram_with_process_id(process_id)
                 for i in range(frames_to_remove_per_process):
                     lru_frame = self.get_lru_frame(frames_in_ram_with_process_id)
+                    if lru_frame and lru_frame.get_page():
+                        self.processes[process_id].increment_page_out()
                     available_frames.append(lru_frame)
                     frames_in_ram_with_process_id.remove(lru_frame)
-                    # self.processes[process_id].increment_page_out()
 
             # Nodige frames toewijden aan process, nog niet er in steken
             for frame in available_frames:
@@ -136,9 +137,12 @@ class Controller:
             frames_in_ram_with_process_id = self.get_frames_in_ram_with_process_id(instruction.get_process_id())
             for process_id in self.processes_in_ram:
                 for i in range(frames_to_add_per_process):
+                    if frames_in_ram_with_process_id[0].get_page():
+                        self.processes[process_id].increment_page_out()
                     frames_in_ram_with_process_id[0].set_process_id(process_id)
                     frames_in_ram_with_process_id[0].set_page(None)
                     frames_in_ram_with_process_id.remove(frames_in_ram_with_process_id[0])
+        self.processes[instruction.get_process_id()].clear_page_table()
 
     def select_instruction(self, instruction):
         if instruction.get_operation() == "Start":
@@ -150,20 +154,6 @@ class Controller:
         elif instruction.get_operation() == "Terminate":
             self.terminate(instruction)
         self.jiffy += 1
-
-    # def one_instruction(self):
-    #     if self.jiffy < len(self.instructions):
-    #         instruction = self.instructions[self.jiffy]
-    #         self.select_instruction(instruction)
-    #
-    #         jiffy = self.jiffy
-    #         virtual_address = instruction.get_address()
-    #         page_table = self.processes[instruction.get_process_id()].get_page_table()
-    #         physical_address = page_table[virtual_address // 4096].get_frame_number() * 4096 + virtual_address % 4096
-    #
-    #         physical_address
-    #         return jiffy, , self.processes[instruction.get_process_id()].get_page_table(), \
-    #             self.ram
 
     def one_instruction(self):
         if self.jiffy < len(self.instructions):
@@ -180,7 +170,10 @@ class Controller:
             return_values.append(physical_address)
 
             return_values.append(instruction)
-            return_values.append(self.instructions[self.jiffy])  # Jiffy is al geïncrementeerd, dus wijst al naar de volgende instructie
+            if self.jiffy < len(self.instructions):
+                return_values.append(self.instructions[self.jiffy])  # Jiffy is al geïncrementeerd, dus wijst al naar de volgende instructie
+            else:
+                return_values.append("/")
 
             page_numbers = ["Page Number"]
             present_bits = ["Present Bit"]
@@ -223,6 +216,6 @@ class Controller:
             return return_values
 
     def all_instructions(self):
-        while self.jiffy < len(self.instructions):
+        while self.jiffy < len(self.instructions) - 1:
             self.select_instruction(self.instructions[self.jiffy])
         return self.one_instruction()

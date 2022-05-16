@@ -67,3 +67,7 @@ class Process:
 
     def increment_page_out(self):
         self.page_out += 1
+
+    def clear_page_table(self):
+        for page in self.page_table:
+            page.clear_page()

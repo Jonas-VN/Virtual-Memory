@@ -3,17 +3,10 @@ from functions import parse_data
 import PySimpleGUI as Sg
 
 
-def to_physical(virtual_address, process_id, controller):
-    virtual_page_number = virtual_address // 4096
-    offset = virtual_address % 4096
-
-    physical_page_number = controller.processes[process_id].get_page_table()[virtual_page_number].get_page_number()
-    return physical_page_number + offset
-
-
 def main():
-    instructions = parse_data("instructions_30_3.xml")
+    instructions = parse_data("instructions_20000_20.xml")
     controller = Controller(instructions)
+    reached_end = False
 
     layout = [[Sg.Text("Besturingssystemen")]], [Sg.Button("Run 1")], [Sg.Button("Run all")]
     window = Sg.Window("Demo", layout)
@@ -22,7 +15,7 @@ def main():
 
     while True:
         event, values = window.read()
-        if event == "Run 1":
+        if event == "Run 1" and not reached_end:
             jiffy, physical_address, current_instruction, next_instruction, page_tabel, ram, page_in, page_out = \
                 controller.one_instruction()
 
@@ -40,12 +33,15 @@ def main():
 
             print("\nRam:", font="Courier 10 bold")
             print(ram, font="Courier 10 italic")
-            print()
-            print(page_in)
-            print(page_out)
 
-        elif event == "Run all":
-            jiffy, physical_address, current_instruction, next_instruction, page_tabel, ram, page_faults = \
+            print(f"\nPage in: {page_in}", font="Courier 10 bold")
+            print(f"Page out: {page_out}", font="Courier 10 bold")
+
+            if next_instruction == "/":
+                reached_end = True
+
+        elif event == "Run all" and not reached_end:
+            jiffy, physical_address, current_instruction, next_instruction, page_tabel, ram, page_in, page_out = \
                 controller.all_instructions()
 
             print(f"\nJiffy: {jiffy}", font="Courier 10 bold")
@@ -62,6 +58,12 @@ def main():
 
             print("\nRam:", font="Courier 10 bold")
             print(ram, font="Courier 10 italic")
+
+            print(f"\nPage in: {page_in}", font="Courier 10 bold")
+            print(f"Page out: {page_out}", font="Courier 10 bold")
+
+            if next_instruction == "/":
+                reached_end = True
 
         elif event == Sg.WIN_CLOSED:
             break

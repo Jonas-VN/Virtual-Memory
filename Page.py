@@ -6,13 +6,6 @@ class Page:
         self.last_access_time = -1
         self.frame_number = -1
 
-    def __str__(self):
-        return "\tPage Number: " + str(self.get_page_number()) + "\n" + \
-               "\tPresent Bit: " + str(self.get_present_bit()) + "\n" + \
-               "\tModified Bit: " + str(self.get_modified_bit()) + "\n" + \
-               "\tLast Access Time: " + str(self.get_last_access_time()) + "\n" + \
-               "\tFrame Number: " + str(self.get_frame_number()) + "\n"
-
     def get_page_number(self):
         return self.page_number
 

@@ -1,33 +1,27 @@
 from Frame import Frame
 from Process import Process
+from Instruction import Instruction
+import xml.etree.ElementTree as Et
 from tabulate import tabulate
 
 
-class Controller:
-    def __init__(self, instructions):
-        self.instructions = instructions
+class Program:
+    def __init__(self, file):
+        self.instructions = self.load_instructions(file)
         self.jiffy = 0
-        self.ram = []
+        self.ram = [Frame(i) for i in range(12)]
         self.processes = []
         self.processes_in_ram = []
 
-        for i in range(12):
-            self.ram.append(Frame(i))
-
-    def get_ram(self):
-        return self.ram
-
-    def get_processes_in_ram(self):
-        return self.processes_in_ram
-
-    def get_jiffy(self):
-        return self.jiffy
-
-    def get_instructions(self):
-        return self.instructions
-
-    def get_processes(self):
-        return self.processes
+    @staticmethod
+    def load_instructions(filename):
+        tree = Et.parse("./Data/" + filename)
+        root = tree.getroot()
+        instructions = []
+        for instruction in root:
+            instructions.append(
+                Instruction(int(instruction[0].text), instruction[1].text, int(instruction[2].text)))
+        return instructions
 
     @staticmethod
     def get_lru_frame(frames):
@@ -51,26 +45,6 @@ class Controller:
             if frame.get_process_id() == process_id:
                 frames.append(frame)
         return frames
-
-    def check_ram(self, instruction):
-        process_id = instruction.get_process_id()
-        process = self.processes[process_id]
-        address = instruction.get_address()
-        page = process.get_page(address)
-
-        if not page.get_present_bit():
-            frames_in_ram_with_process_id = self.get_frames_in_ram_with_process_id(process_id)
-            lru_frame = self.get_lru_frame(frames_in_ram_with_process_id)
-            if lru_frame.get_page():
-                frame_page = lru_frame.get_page()
-                frame_page.clear_page()
-                process.increment_page_out()
-
-            lru_frame.set_page(page)
-            page.set_page(lru_frame.get_frame_number())
-            process.increment_page_in()
-
-        page.set_last_access_time(self.jiffy)
 
     def start(self, instruction):
         process = Process(instruction.get_process_id())
@@ -108,11 +82,28 @@ class Controller:
             self.processes_in_ram.append(instruction.get_process_id())
 
     def write(self, instruction):
-        self.check_ram(instruction)
+        self.read(instruction)
         self.processes[instruction.get_process_id()].write(instruction.get_address())
 
     def read(self, instruction):
-        self.check_ram(instruction)
+        process_id = instruction.get_process_id()
+        process = self.processes[process_id]
+        address = instruction.get_address()
+        page = process.get_page(address)
+
+        if not page.get_present_bit():
+            frames_in_ram_with_process_id = self.get_frames_in_ram_with_process_id(process_id)
+            lru_frame = self.get_lru_frame(frames_in_ram_with_process_id)
+            if lru_frame.get_page():
+                frame_page = lru_frame.get_page()
+                frame_page.clear_page()
+                process.increment_page_out()
+
+            lru_frame.set_page(page)
+            page.set_page(lru_frame.get_frame_number())
+            process.increment_page_in()
+
+        page.set_last_access_time(self.jiffy)
 
     def terminate(self, instruction):
         # Nog maar 1 process in de ram, alles opruimen
@@ -137,6 +128,7 @@ class Controller:
             frames_in_ram_with_process_id = self.get_frames_in_ram_with_process_id(instruction.get_process_id())
             for process_id in self.processes_in_ram:
                 for i in range(frames_to_add_per_process):
+                    # Nog pages in RAM van dat process
                     if frames_in_ram_with_process_id[0].get_page():
                         self.processes[process_id].increment_page_out()
                     frames_in_ram_with_process_id[0].set_process_id(process_id)
@@ -160,8 +152,7 @@ class Controller:
             instruction = self.instructions[self.jiffy]
             self.select_instruction(instruction)
 
-            return_values = []
-            return_values.append(self.jiffy)
+            return_values = [self.jiffy]
 
             virtual_page_number = instruction.get_address() // 4096
             offset = instruction.get_address() % 4096
@@ -170,6 +161,7 @@ class Controller:
             return_values.append(physical_address)
 
             return_values.append(instruction)
+
             if self.jiffy < len(self.instructions):
                 return_values.append(self.instructions[self.jiffy])  # Jiffy is al geïncrementeerd, dus wijst al naar de volgende instructie
             else:
@@ -187,7 +179,6 @@ class Controller:
                 last_access_times.append(page.get_last_access_time())
                 frame_numbers.append(page.get_frame_number())
             table = [page_numbers, present_bits, modified_bits, last_access_times, frame_numbers]
-
             return_values.append(tabulate(table, tablefmt="grid"))
 
             process_ids = ["Process ID"]
@@ -200,7 +191,6 @@ class Controller:
                 else:
                     page_numbers.append("")
                 frame_numbers.append(frame.get_frame_number())
-
             table = [frame_numbers, process_ids, page_numbers]
             return_values.append(tabulate(table, tablefmt="grid"))
 

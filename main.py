@@ -1,23 +1,23 @@
-from Controller import Controller
-from functions import parse_data
+from Program import Program
 import PySimpleGUI as Sg
 
 
 def main():
-    instructions = parse_data("instructions_20000_4.xml")
-    controller = Controller(instructions)
+    program = None
     reached_end = False
 
-    layout = [[Sg.Text("Besturingssystemen")]], [Sg.Button("Run 1")], [Sg.Button("Run all")]
-    window = Sg.Window("Demo", layout)
+    layout = [[Sg.Text("Besturingssystemen")]], \
+             [Sg.Button("Run 1")], [Sg.Button("Run all")], \
+             [Sg.Button("30_3")], [Sg.Button("20000_4")], [Sg.Button("20000_20")]
+    window = Sg.Window("Demo", layout, grab_anywhere=True, keep_on_top=True)
     Sg.set_options(debug_win_size=(150, 50))
     print = Sg.Print
 
     while True:
         event, values = window.read()
-        if event == "Run 1" and not reached_end:
+        if event == "Run 1" and not reached_end and program:
             jiffy, physical_address, current_instruction, next_instruction, page_tabel, ram, page_in, page_out = \
-                controller.one_instruction()
+                program.one_instruction()
 
             print(background_color="black")
 
@@ -42,12 +42,12 @@ def main():
             print(background_color="black")
 
             if next_instruction == "/":
-                print("\n\nEnd of the program.", font="Courier 15 bold")
+                print("\n\nEnd of the program.\n\n", font="Courier 15 bold")
                 reached_end = True
 
-        elif event == "Run all" and not reached_end:
+        elif event == "Run all" and not reached_end and program:
             jiffy, physical_address, current_instruction, next_instruction, page_tabel, ram, page_in, page_out = \
-                controller.all_instructions()
+                program.all_instructions()
 
             print(background_color="black")
 
@@ -72,8 +72,32 @@ def main():
             print(background_color="black")
 
             if next_instruction == "/":
-                print("\n\nEnd of the program.", font="Courier 15 bold")
+                print("\n\nEnd of the program.\n\n", font="Courier 15 bold")
                 reached_end = True
+
+        elif event == "30_3":
+            Sg.easy_print_close()
+            print(background_color="black")
+            program = Program("instructions_30_3.xml")
+            reached_end = False
+            print("\n30 instructions with 3 processes\n", font="Courier 15 bold")
+            print(background_color="black")
+
+        elif event == "20000_4":
+            Sg.easy_print_close()
+            print(background_color="black")
+            program = Program("instructions_20000_4.xml")
+            reached_end = False
+            print("\n20.000 instructions with 4 processes\n", font="Courier 15 bold")
+            print(background_color="black")
+
+        elif event == "20000_20":
+            Sg.easy_print_close()
+            print(background_color="black")
+            program = Program("instructions_20000_20.xml")
+            reached_end = False
+            print("\n20.000 instructions with 20 processes\n", font="Courier 15 bold")
+            print(background_color="black")
 
         elif event == Sg.WIN_CLOSED:
             break

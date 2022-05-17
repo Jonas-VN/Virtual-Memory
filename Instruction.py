@@ -4,7 +4,7 @@ class Instruction:
         self.operation = operation
         self.address = address
 
-    def __str__(self):
+    def __repr__(self):
         return "Process ID: " + str(self.process_id) + " Operation: " + str(self.operation) + " Virtual Address: " + str(self.address)
 
     def get_process_id(self):

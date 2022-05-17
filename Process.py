@@ -20,16 +20,12 @@ class Process:
     def get_page_out(self):
         return self.page_out
 
-    @staticmethod
-    def address_to_page(address):
-        return address // 4096
-
     def write(self, address):
-        page_number = self.address_to_page(address)
+        page_number = address // 4096
         self.page_table[page_number].set_modified_bit(True)
 
     def get_page(self, address):
-        page_number = self.address_to_page(address)
+        page_number = address // 4096
         return self.page_table[page_number]
 
     def increment_page_in(self):

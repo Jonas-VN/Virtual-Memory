@@ -17,7 +17,7 @@ def main():
         event, values = window.read()
         if event == "Run 1" and not reached_end and program:
             jiffy, physical_address, current_instruction, next_instruction, page_tabel, ram, page_in, page_out = \
-                program.one_instruction()
+                program.run_one()
 
             print(background_color="black")
 
@@ -47,7 +47,7 @@ def main():
 
         elif event == "Run all" and not reached_end and program:
             jiffy, physical_address, current_instruction, next_instruction, page_tabel, ram, page_in, page_out = \
-                program.all_instructions()
+                program.run_all()
 
             print(background_color="black")
 

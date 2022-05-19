@@ -5,7 +5,7 @@ class Instruction:
         self.address = address
 
     def __repr__(self):
-        return "Process ID: " + str(self.process_id) + " Operation: " + str(self.operation) + " Virtual Address: " + str(self.address)
+        return "Process ID: " + str(self.process_id) + " | Operation: " + str(self.operation) + " | Virtual Address: " + str(self.address)
 
     def get_process_id(self):
         return self.process_id

@@ -39,7 +39,10 @@ class Program:
                 lru_frame = frame
         return lru_frame
 
-    def get_frames_in_ram_with_process_id(self, process_id):
+    def get_process(self, instruction):
+        return self.processes[instruction.get_process_id()]
+
+    def get_frame_from_ram(self, process_id):
         frames = []
         for frame in self.ram:
             if frame.get_process_id() == process_id:
@@ -63,27 +66,23 @@ class Program:
             new_frames_per_process = 12 // (len(self.processes_in_ram) + 1)
             frames_to_remove_per_process = old_frames_per_process - new_frames_per_process
 
-            # Nodige frames van andere processen verwijderen
-            available_frames = []
+            # Nodige frames van andere processen verwijderen en al op het juiste process id zetten
             for process_id in self.processes_in_ram:
-                frames_in_ram_with_process_id = self.get_frames_in_ram_with_process_id(process_id)
+                frames_in_ram = self.get_frame_from_ram(process_id)
                 for i in range(frames_to_remove_per_process):
-                    lru_frame = self.get_lru_frame(frames_in_ram_with_process_id)
-                    if lru_frame and lru_frame.get_page():
+                    lru_frame = self.get_lru_frame(frames_in_ram)
+                    if lru_frame.get_page():  # and lru_frame.get_page().get_present_bit(): -> overbodig, als niet present is page None
                         self.processes[process_id].increment_page_out()
-                    available_frames.append(lru_frame)
-                    frames_in_ram_with_process_id.remove(lru_frame)
 
-            # Nodige frames toewijden aan process, nog niet er in steken
-            for frame in available_frames:
-                frame.set_process_id(instruction.get_process_id())
-                frame.set_page(None)
+                    frames_in_ram.remove(lru_frame)
+                    lru_frame.set_process_id(instruction.get_process_id())
+                    lru_frame.set_page(None)
 
             self.processes_in_ram.append(instruction.get_process_id())
 
     def write(self, instruction):
         self.read(instruction)
-        self.processes[instruction.get_process_id()].write(instruction.get_address())
+        self.get_process(instruction).set_modified_bit(instruction.get_address())
 
     def read(self, instruction):
         process_id = instruction.get_process_id()
@@ -92,13 +91,16 @@ class Program:
         page = process.get_page(address)
 
         if not page.get_present_bit():
-            frames_in_ram_with_process_id = self.get_frames_in_ram_with_process_id(process_id)
-            lru_frame = self.get_lru_frame(frames_in_ram_with_process_id)
+            frames_in_ram = self.get_frame_from_ram(process_id)
+            lru_frame = self.get_lru_frame(frames_in_ram)
+
+            # LRU verwijderen
             if lru_frame.get_page():
                 frame_page = lru_frame.get_page()
                 frame_page.clear_page()
                 process.increment_page_out()
 
+            # Nieuw frame toevoegen
             lru_frame.set_page(page)
             page.set_page(lru_frame.get_frame_number())
             process.increment_page_in()
@@ -117,7 +119,7 @@ class Program:
 
             self.processes_in_ram.remove(instruction.get_process_id())
 
-        # Nodige processen extra ruimte geven, niks verwijder/toevoegen
+        # Nodige processen extra ruimte geven
         else:
             old_frames_per_process = 12 // len(self.processes_in_ram)
             new_frames_per_process = 12 // (len(self.processes_in_ram) - 1)
@@ -125,18 +127,18 @@ class Program:
 
             self.processes_in_ram.remove(instruction.get_process_id())
 
-            frames_in_ram_with_process_id = self.get_frames_in_ram_with_process_id(instruction.get_process_id())
+            frames_in_ram = self.get_frame_from_ram(instruction.get_process_id())
             for process_id in self.processes_in_ram:
                 for i in range(frames_to_add_per_process):
                     # Nog pages in RAM van dat process
-                    if frames_in_ram_with_process_id[0].get_page():
+                    if frames_in_ram[0].get_page():
                         self.processes[process_id].increment_page_out()
-                    frames_in_ram_with_process_id[0].set_process_id(process_id)
-                    frames_in_ram_with_process_id[0].set_page(None)
-                    frames_in_ram_with_process_id.remove(frames_in_ram_with_process_id[0])
-        self.processes[instruction.get_process_id()].clear_page_table()
+                    frames_in_ram[0].set_process_id(process_id)
+                    frames_in_ram[0].set_page(None)
+                    frames_in_ram.remove(frames_in_ram[0])
+        self.get_process(instruction).clear_page_table()
 
-    def select_instruction(self, instruction):
+    def run_instruction(self, instruction):
         if instruction.get_operation() == "Start":
             self.start(instruction)
         elif instruction.get_operation() == "Write":
@@ -147,16 +149,16 @@ class Program:
             self.terminate(instruction)
         self.jiffy += 1
 
-    def one_instruction(self):
+    def run_one(self):
         if self.jiffy < len(self.instructions):
             instruction = self.instructions[self.jiffy]
-            self.select_instruction(instruction)
+            self.run_instruction(instruction)
 
             return_values = [self.jiffy]
 
             virtual_page_number = instruction.get_address() // 4096
             offset = instruction.get_address() % 4096
-            physical_page_number = self.processes[instruction.get_process_id()].get_page_table()[virtual_page_number].get_page_number()
+            physical_page_number = self.get_process(instruction).get_page_table()[virtual_page_number].get_page_number()
             physical_address = physical_page_number + offset
             return_values.append(physical_address)
 
@@ -172,7 +174,7 @@ class Program:
             modified_bits = ["Modified Bit"]
             last_access_times = ["Last Access Time"]
             frame_numbers = ["Frame Number"]
-            for page in self.processes[instruction.get_process_id()].get_page_table():
+            for page in self.get_process(instruction).get_page_table():
                 page_numbers.append(page.get_page_number())
                 present_bits.append(page.get_present_bit())
                 modified_bits.append(page.get_modified_bit())
@@ -205,7 +207,7 @@ class Program:
 
             return return_values
 
-    def all_instructions(self):
+    def run_all(self):
         while self.jiffy < len(self.instructions) - 1:
-            self.select_instruction(self.instructions[self.jiffy])
-        return self.one_instruction()
+            self.run_instruction(self.instructions[self.jiffy])
+        return self.run_one()

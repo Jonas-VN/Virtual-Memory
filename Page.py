@@ -3,8 +3,8 @@ class Page:
         self.page_number = page_number
         self.present_bit = False
         self.modified_bit = False
-        self.last_access_time = -1
-        self.frame_number = -1
+        self.last_access_time = None
+        self.frame_number = None
 
     def get_page_number(self):
         return self.page_number
@@ -43,5 +43,5 @@ class Page:
     def clear_page(self):
         self.set_present_bit(False)
         self.set_modified_bit(False)
-        self.set_last_access_time(-1)
-        self.set_frame_number(-1)
+        self.set_last_access_time(None)
+        self.set_frame_number(None)

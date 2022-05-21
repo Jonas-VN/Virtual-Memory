@@ -115,7 +115,7 @@ class Program:
                     frame.get_page().clear_page()
                     frame.set_page(None)
                     self.processes[self.processes_in_ram[0]].increment_page_out()
-                frame.set_process_id(-1)
+                frame.set_process_id(None)
 
             self.processes_in_ram.remove(instruction.get_process_id())
 

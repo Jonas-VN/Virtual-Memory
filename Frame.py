@@ -4,8 +4,8 @@ from Page import Page
 class Frame:
     def __init__(self, frame_number):
         self.frame_number = frame_number
-        self.process_id = -1
-        self.page = Page(-1)
+        self.process_id = None
+        self.page = Page(None)
 
     def get_frame_number(self):
         return self.frame_number

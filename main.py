@@ -88,10 +88,10 @@ def main():
         elif event == "Reset":
             program = None
             file_selected = False
+            Sg.easy_print_close()
 
         elif values["files"] == "instructions_30_3.xml":
             file_selected = True
-            Sg.easy_print_close()
             debug(background_color="black")
             program = Program("instructions_30_3.xml")
             reached_end = False
@@ -100,7 +100,6 @@ def main():
 
         elif values["files"] == "instructions_20000_4.xml":
             file_selected = True
-            Sg.easy_print_close()
             debug(background_color="black")
             program = Program("instructions_20000_4.xml")
             reached_end = False
@@ -109,7 +108,6 @@ def main():
 
         elif values["files"] == "instructions_20000_20.xml":
             file_selected = True
-            Sg.easy_print_close()
             debug(background_color="black")
             program = Program("instructions_20000_20.xml")
             reached_end = False

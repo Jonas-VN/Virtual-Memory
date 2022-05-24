@@ -6,9 +6,6 @@ class Page:
         self.last_access_time = None
         self.frame_number = None
 
-    def __repr__(self):
-        return "Page Number: " + str(self.page_number) + "\t Frame Number: " + str(self.frame_number)
-
     def get_page_number(self):
         return self.page_number
 

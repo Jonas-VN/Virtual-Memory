@@ -157,8 +157,11 @@ class Program:
 
             virtual_page_number = instruction.get_address() // 4096
             offset = instruction.get_address() % 4096
-            physical_page_number = self.get_process(instruction).get_page_table()[virtual_page_number].get_page_number()
-            physical_address = physical_page_number * 4096 + offset
+            physical_page_number = self.get_process(instruction).get_page_table()[virtual_page_number].get_frame_number()
+            if physical_page_number is not None:
+                physical_address = physical_page_number * 4096 + offset
+            else:
+                physical_address = 0
             return_values.append(physical_address)
 
             return_values.append(instruction)

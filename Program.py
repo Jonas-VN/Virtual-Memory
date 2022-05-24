@@ -31,7 +31,6 @@ class Program:
                 lru_frame = frame
                 if frame.get_page() is None:
                     break
-                continue
             if frame.get_page() is None:
                 lru_frame = frame
                 break
@@ -159,7 +158,7 @@ class Program:
             virtual_page_number = instruction.get_address() // 4096
             offset = instruction.get_address() % 4096
             physical_page_number = self.get_process(instruction).get_page_table()[virtual_page_number].get_page_number()
-            physical_address = physical_page_number + offset
+            physical_address = physical_page_number * 4096 + offset
             return_values.append(physical_address)
 
             return_values.append(instruction)

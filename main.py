@@ -33,6 +33,7 @@ def main():
 
             debug(f"\nJiffy: {jiffy}", font="Courier 10 bold")
             debug(f"\nPhysical address: {physical_address}", font="Courier 10 bold")
+            debug(f"Physical page: {physical_address // 4096}", font="Courier 10 bold")
 
             debug("\nCurrent instruction:", font="Courier 10 bold")
             debug(current_instruction, font="Courier 10 italic")
